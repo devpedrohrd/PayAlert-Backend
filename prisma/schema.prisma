@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Cliente {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique @db.VarChar(40)
+  telefone     String   @unique
+  vendas       Venda[]
+  alertas      Alerta[]
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model Venda {
+  id             Int       @id @default(autoincrement())
+  clienteId      Int
+  cliente        Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  valor          Float     @db.DoublePrecision
+  status         Status    @default(PENDENTE)
+  dataVencimento DateTime
+  dataPagamento  DateTime?
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+
+  @@index([clienteId, status])
+}
+
+model Alerta {
+  id           Int      @id @default(autoincrement())
+  clienteId    Int
+  cliente      Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  mensagem     String   @db.VarChar(255)
+  resolvido    Boolean  @default(false)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+enum Status {
+  PENDENTE
+  PAGO
+  ATRASADO
+}
